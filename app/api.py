@@ -33,7 +33,7 @@ def substract(op_1, op_2):
         return (str(e), http.client.BAD_REQUEST, HEADERS)
     
 @api_application.route("/calc/multiply/<op_1>/<op_2>", methods=["GET"])
-def add(op_1, op_2):
+def multiply(op_1, op_2):
     try:
         num_1, num_2 = util.convert_to_number(op_1), util.convert_to_number(op_2)
         return ("{}".format(CALCULATOR.multiply(num_1, num_2)), http.client.OK, HEADERS)
@@ -41,9 +41,12 @@ def add(op_1, op_2):
         return (str(e), http.client.BAD_REQUEST, HEADERS)
     
 @api_application.route("/calc/divide/<op_1>/<op_2>", methods=["GET"])
-def add(op_1, op_2):
+def divide(op_1, op_2):
     try:
         num_1, num_2 = util.convert_to_number(op_1), util.convert_to_number(op_2)
         return ("{}".format(CALCULATOR.divide(num_1, num_2)), http.client.OK, HEADERS)
     except TypeError as e:
-        return (str(e), http.client.BAD_REQUEST, HEADERS)
+        if e== "Division by zero is not possible":
+            return(str(e), http.client.NOT_ACCEPTABLE, HEADERS)
+        else:
+            return (str(e), http.client.BAD_REQUEST, HEADERS)
