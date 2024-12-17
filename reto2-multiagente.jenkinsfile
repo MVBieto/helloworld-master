@@ -1,0 +1,62 @@
+pipeline {
+    agent none
+    stages {
+        stage('GetCode') {
+            agent { label 'windows-node1' }
+            steps {
+                git 'https://github.com/MVBieto/helloworld-master.git'
+                stash name: 'source-code', includes: '**'
+            }
+        }
+        stage('Build') {
+            agent any
+            steps {
+                echo 'Testing build stage'
+                bat "dir"
+            }
+        }
+        stage('Parallel Tests Run'){
+            parallel {
+                stage('Unit') {
+                    agent { label 'windows-node1' }
+                    steps {
+                        unstash 'source-code'
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            bat '''
+                            set PYTHONPATH=%WORKSPACE%
+                            pytest --junitxml=result-unit.xml test\\unit
+                            '''
+                        }
+                    stash name: 'unit-results', includes: 'result-unit.xml'
+                    }
+                }
+                stage('Service') {
+                    agent { label 'windows-node2' }
+                    steps {
+                        unstash 'source-code'
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            bat '''
+                                set FLASK_APP=app\\api.py
+                                start flask run
+                                cd C:\\Users\\mique\\Desktop\\Caso Practico 1.1\\helloworld-master\\test\\wiremock
+                                start java -jar wiremock-standalone-3.10.0.jar -port=9090
+                                set PYTHONPATH=%WORKSPACE%
+                                cd %WORKSPACE%
+                                pytest --junitxml=result-rest.xml test\\rest
+                            '''
+                        }
+                        stash name: 'rest-results', includes: 'result-rest.xml'
+                    }
+                }
+            }
+        }
+        stage('Results') {
+            agent any
+            steps {
+                unstash 'unit-results'
+                unstash 'rest-results'
+                junit 'result*.xml'
+            }
+        }
+    }
+}
