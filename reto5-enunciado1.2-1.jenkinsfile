@@ -3,7 +3,7 @@ pipeline {
     stages {
         stage('GetCode') {
             steps {
-                git branch: 'develop', url: 'https://github.com/MVBieto/helloworld-master.git'
+                git branch: 'master', url: 'https://github.com/MVBieto/helloworld-master.git'
             }
         }
         stage('Unit') {
