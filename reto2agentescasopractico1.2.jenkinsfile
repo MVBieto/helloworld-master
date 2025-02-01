@@ -10,6 +10,7 @@ pipeline {
         stage('Pruebas estaticas') {
             parallel {
                 stage('Unit') {
+                    agent { main }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -44,14 +45,15 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-        stage('Coverage') {
-            steps {
-                unstash 'source-code'
-                unstash 'unit-results'
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    cobertura coberturaReportFile: 'result-unit.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
+                stage('Coverage') {
+                    agent { main }
+                    steps {
+                        unstash 'source-code'
+                        unstash 'unit-results'
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            cobertura coberturaReportFile: 'result-unit.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
+                        }
+                    }
                 }
             }
         }
