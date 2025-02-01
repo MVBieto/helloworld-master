@@ -24,7 +24,7 @@ pipeline {
                     }
                 }
                 stage('Coverage') {
-                    agent { label 'windows-node1' }
+                    agent { label 'windows-node2' }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -49,7 +49,7 @@ pipeline {
                     }
                 }
                 stage('Security') {
-                    agent { label 'windows-node1' }
+                    agent { label 'windows-node2' }
                     steps {
                         unstash 'source-code'
                         bat '''
@@ -63,7 +63,7 @@ pipeline {
             }
         }
         stage('Performance') {
-            agent { label 'windows-node2' }
+            agent { label 'windows-node1' }
             steps {
                 unstash 'source-code'
                 bat '''
