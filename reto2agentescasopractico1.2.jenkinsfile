@@ -1,7 +1,6 @@
 pipeline {
     agent any
     stages {
-        agent { windows-node1 }
         stage('GetCode') {
             steps {
                 git branch: 'master', url: 'https://github.com/MVBieto/helloworld-master.git'
