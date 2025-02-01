@@ -51,7 +51,7 @@ pipeline {
                 unstash 'source-code'
                 unstash 'unit-results'
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    cobertura coberturaReportFile: 'result*.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
+                    cobertura coberturaReportFile: 'result-unit.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
                 }
             }
         }
