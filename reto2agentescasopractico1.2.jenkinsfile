@@ -10,6 +10,7 @@ pipeline {
         stage('Pruebas estaticas') {
             parallel {
                 stage('Unit') {
+                    agent { label 'windows-node1' }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -48,6 +49,7 @@ pipeline {
             }
         }
         stage('Cobertura') {
+            agent { label 'windows-node1' }
             steps {
                 unstash 'results'
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -61,7 +63,7 @@ pipeline {
                     set FLASK_APP=app\\api.py
                     start flask run
                 '''
-                sleep 5
+                sleep 2
                 bat '''
                     C:\\Users\\mique\\Desktop\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\TEST_CLASE.jmx -f -l flask.jtl
                 '''
