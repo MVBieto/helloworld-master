@@ -1,5 +1,5 @@
 pipeline {
-    agent none
+    agent any
     stages {
         stage('GetCode') {
             agent { label 'windows-node1' }
@@ -11,7 +11,6 @@ pipeline {
         stage('Pruebas estaticas') {
             parallel {
                 stage('Unit') {
-                    agent { label 'windows-node1' }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -24,7 +23,6 @@ pipeline {
                     }
                 }
                 stage('Coverage') {
-                    agent { label 'windows-node2' }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -37,7 +35,6 @@ pipeline {
                     }
                 }
                 stage('Static') {
-                    agent { label 'windows-node1' }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -49,7 +46,6 @@ pipeline {
                     }
                 }
                 stage('Security') {
-                    agent { label 'windows-node2' }
                     steps {
                         unstash 'source-code'
                         bat '''
@@ -63,7 +59,6 @@ pipeline {
             }
         }
         stage('Performance') {
-            agent { label 'windows-node1' }
             steps {
                 unstash 'source-code'
                 bat '''
