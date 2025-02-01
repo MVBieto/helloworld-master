@@ -1,0 +1,70 @@
+pipeline {
+    agent any
+    stages {
+        stage('GetCode') {
+            steps {
+                git branch: 'feature-fix-coverage', url: 'https://github.com/MVBieto/helloworld-master.git'
+                stash name: 'source-code', includes: '**'
+            }
+        }
+        stage('Unit') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                    set PYTHONPATH=%WORKSPACE%
+                    coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
+                    coverage xml
+                    '''
+                    junit 'result*.xml'
+                }
+            }
+        }
+        stage('Coverage') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
+                }
+            }
+        }
+        stage('Pruebas estaticas') {
+            parallel {
+                stage('Static') {
+                    steps {
+                        unstash 'source-code'
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            bat '''
+                                flake8 --exit-zero --format=pylint app >flake8.out
+                            '''
+                            recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [[threshold: 8, type: 'TOTAL', unstable: true], [threshold: 10, type: 'TOTAL', unstable: false]]
+                        }
+                    }
+                }
+                stage('Security') {
+                    steps {
+                        unstash 'source-code'
+                        bat '''
+                            bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
+                        '''
+                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                            recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]
+                        }
+                    }
+                }
+            }
+        }
+        stage('Performance') {
+            steps {
+                bat '''
+                    set FLASK_APP=app\\api.py
+                    start flask run
+                '''
+                sleep 2
+                bat '''
+                    C:\\Users\\mique\\Desktop\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\TEST_CLASE.jmx -f -l flask.jtl
+                '''
+                perfReport sourceDataFiles: 'flask.jtl'
+            }
+        }
+    }
+}
+
