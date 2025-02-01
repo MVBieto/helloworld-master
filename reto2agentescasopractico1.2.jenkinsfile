@@ -10,7 +10,6 @@ pipeline {
         stage('Pruebas estaticas') {
             parallel {
                 stage('Unit') {
-                    agent { label 'windows-node1' }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -20,7 +19,7 @@ pipeline {
                             coverage xml
                             '''
                             junit 'result*.xml'
-                            stash name: 'results', includes: '**'
+                            stash name: 'results', includes: 'coverage.xml'
                         }
                     }
                 }
@@ -48,10 +47,8 @@ pipeline {
                 }
             }
         }
-        stage('Cobertura') {
-            agent { label 'windows-node1' }
+        stage('Coverage') {
             steps {
-                unstash 'results'
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
                 }
