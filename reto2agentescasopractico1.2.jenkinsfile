@@ -21,7 +21,7 @@ pipeline {
                             '''
                             junit 'result*.xml'
                         }
-                        stash name: 'coverageresults'
+                        stash name: 'coverageresults', includes: 'coverage.xml'
                     }
                 }
                 stage('Static') {
