@@ -20,7 +20,7 @@ pipeline {
         stage('Coverage') {
             steps {
                 bat '''
-                coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m result-unit.xml
+                coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m %WORKSPACE%/result-unit.xml
                 coverage xml
                 '''
 
