@@ -19,7 +19,7 @@ pipeline {
                             coverage xml
                             '''
                             junit 'result*.xml'
-                            stash name: 'results', includes: 'coverage.xml'
+                            cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'                       
                         }
                     }
                 }
@@ -44,13 +44,6 @@ pipeline {
                             recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]
                         }
                     }
-                }
-            }
-        }
-        stage('Cobertura') {
-            steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
                 }
             }
         }
