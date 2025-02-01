@@ -1,15 +1,13 @@
 pipeline {
-    agent none
+    agent any
     stages {
         stage('GetCode') {
-            agent { any }
             steps {
                 git branch: 'master', url: 'https://github.com/MVBieto/helloworld-master.git'
             }
         }
         stage('Unit') {
             steps {
-                agent any
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
                     set PYTHONPATH=%WORKSPACE%
@@ -21,7 +19,6 @@ pipeline {
         }
         stage('Coverage') {
             steps {
-                agent { any }
                 bat '''
                 coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest test\\unit
                 coverage xml
@@ -34,7 +31,6 @@ pipeline {
         }
         stage('Static') {
             steps {
-                agent { any }
                 bat '''
                     flake8 --exit-zero --format=pylint app >flake8.out
                 '''
@@ -45,7 +41,6 @@ pipeline {
         }
         stage('Security') {
             steps {
-                agent { any }
                 bat '''
                     bandit --exit-zero -r . -f custom -o bandit.out --msg-template "{abspath}:{line}: [{test_id}] {msg}"
                 '''
@@ -56,7 +51,6 @@ pipeline {
         }
         stage('Performance') {
             steps {
-                agent { any }
                 bat '''
                     set FLASK_APP=app\\api.py
                     start flask run
