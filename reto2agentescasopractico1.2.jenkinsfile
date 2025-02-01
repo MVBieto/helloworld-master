@@ -2,7 +2,6 @@ pipeline {
     agent any
     stages {
         stage('GetCode') {
-            agent { label 'windows-node1' }
             steps {
                 git branch: 'master', url: 'https://github.com/MVBieto/helloworld-master.git'
                 stash name: 'source-code', includes: '**'
