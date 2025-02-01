@@ -49,8 +49,6 @@ pipeline {
         }
         stage('Cobertura') {
             steps {
-                unstash 'source-code'
-                unstash 'results'
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
                 }
@@ -58,7 +56,6 @@ pipeline {
         }
         stage('Performance') {
             steps {
-                unstash 'source-code'
                 bat '''
                     set FLASK_APP=app\\api.py
                     start flask run
