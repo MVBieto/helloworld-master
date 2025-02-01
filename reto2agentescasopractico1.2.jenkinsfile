@@ -1,7 +1,6 @@
 pipeline {
-    agent none
+    agent any
     stages {
-        agent { windows-node1 }
         stage('GetCode') {
             steps {
                 git branch: 'master', url: 'https://github.com/MVBieto/helloworld-master.git'
@@ -11,7 +10,6 @@ pipeline {
         stage('Pruebas estaticas') {
             parallel {
                 stage('Unit') {
-                    agent { windows-node1 }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -26,7 +24,6 @@ pipeline {
                     }
                 }
                 stage('Static') {
-                    agent any
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -38,7 +35,6 @@ pipeline {
                     }
                 }
                 stage('Security') {
-                    agent any
                     steps {
                         unstash 'source-code'
                         bat '''
@@ -52,7 +48,6 @@ pipeline {
             }
         }
         stage('Performance') {
-            agent any
             steps {
                 bat '''
                     set FLASK_APP=app\\api.py
