@@ -50,8 +50,9 @@ pipeline {
                 bat '''
                     set flask_app=app\\api.py
                     flask run
-                    start /wait timeout 5000 
+                    timeout /t 5
                     C:\\Users\\mique\\Desktop\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\flask.jmx -f -l flask.jtl
+                    exit
                 '''
                 perfReport sourceDataFiles: 'flask.jtl'
             }
