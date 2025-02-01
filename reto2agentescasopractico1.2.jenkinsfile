@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent none
     stages {
         stage('GetCode') {
             steps {
@@ -8,6 +8,7 @@ pipeline {
         }
         stage('Pruebas estaticas') {
             parallel {
+                agent { label 'windows-node1' }
                 stage('Unit') {
                     steps {
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -54,6 +55,7 @@ pipeline {
             }
         }
         stage('Performance') {
+            agent { label 'windows-node2' }
             steps {
                 bat '''
                     set FLASK_APP=app\\api.py
