@@ -7,7 +7,7 @@ pipeline {
             }
         }
         stage('Parallel static vs performance') {
-            parallel{
+            parallel {
                 stage('Pruebas estaticas') {
                     parallel {
                         stage('Unit') {
@@ -59,19 +59,19 @@ pipeline {
                         }
                     }
                 }
-            }
-            stage('Performance') {
-                agent { label 'windows-node2' }
-                steps {
-                    bat '''
-                        set FLASK_APP=app\\api.py
-                        start flask run
-                    '''
-                    sleep 5
-                    bat '''
-                        C:\\Users\\mique\\Desktop\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\TEST_CLASE.jmx -f -l flask.jtl
-                    '''
-                    perfReport sourceDataFiles: 'flask.jtl'
+                stage('Performance') {
+                    agent { label 'windows-node2' }
+                    steps {
+                        bat '''
+                            set FLASK_APP=app\\api.py
+                            start flask run
+                        '''
+                        sleep 5
+                        bat '''
+                            C:\\Users\\mique\\Desktop\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\TEST_CLASE.jmx -f -l flask.jtl
+                        '''
+                        perfReport sourceDataFiles: 'flask.jtl'
+                    }
                 }
             }
         }
