@@ -9,7 +9,7 @@ pipeline {
         }
         stage('Pruebas estaticas') {
             parallel {
-                stage('Unit') {
+                stage('Unit And Coverage') {
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -19,7 +19,7 @@ pipeline {
                             coverage xml
                             '''
                         junit 'result*.xml'
-                        stash name: 'coverage', includes: 'coverage.xml'
+                        cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
                         }
                     }
                 }
@@ -45,13 +45,6 @@ pipeline {
                         }
                     }
                 }
-            }
-        }
-        stage('Coverage') {
-            steps {
-                unstash 'source-code'
-                unstash 'coverage'
-                cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
             }
         }
         stage('Performance') {
