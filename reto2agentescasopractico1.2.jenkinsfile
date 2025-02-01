@@ -7,23 +7,28 @@ pipeline {
                 stash name: 'source-code', includes: '**'
             }
         }
+        stage('Unit') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                    set PYTHONPATH=%WORKSPACE%
+                    coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest test\\unit
+                    --junitxml=result-unit.xml
+                    coverage xml
+                    '''
+                    junit 'result*.xml'
+                }
+            }
+        }
+        stage('Coverage') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
+                }
+            }
+        }
         stage('Pruebas estaticas') {
             parallel {
-                stage('Unit') {
-                    steps {
-                        unstash 'source-code'
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat '''
-                            set PYTHONPATH=%WORKSPACE%
-                            coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest test\\unit
-                            --junitxml=result-unit.xml
-                            coverage xml
-                            '''
-                            junit 'result*.xml'
-                        }
-                        stash name: 'coverageresults', includes: 'coverage.xml'
-                    }
-                }
                 stage('Static') {
                     steps {
                         unstash 'source-code'
@@ -45,19 +50,6 @@ pipeline {
                             recordIssues tools: [pyLint(name: 'Bandit', pattern: 'bandit.out')], qualityGates: [[threshold: 2, type: 'TOTAL', unstable: true], [threshold: 4, type: 'TOTAL', unstable: false]]
                         }
                     }
-                }
-            }
-        }
-        stage('Coverage') {
-            steps {
-                unstash 'source-code'
-                unstash 'coverageresults'
-                sleep 5
-                bat '''
-                dir
-                '''
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
                 }
             }
         }
