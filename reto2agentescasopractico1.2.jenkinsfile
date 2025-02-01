@@ -1,6 +1,7 @@
 pipeline {
-    agent any
+    agent none
     stages {
+        agent { windows-node1 }
         stage('GetCode') {
             steps {
                 git branch: 'master', url: 'https://github.com/MVBieto/helloworld-master.git'
@@ -10,20 +11,22 @@ pipeline {
         stage('Pruebas estaticas') {
             parallel {
                 stage('Unit') {
+                    agent { windows-node1 }
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                             bat '''
                             set PYTHONPATH=%WORKSPACE%
-                            coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
+                            coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest test\\unit
+                            --junitxml=result-unit.xml
                             coverage xml
                             '''
                             junit 'result*.xml'
-                            stash name: 'results', includes: 'coverage.xml'
                         }
                     }
                 }
                 stage('Static') {
+                    agent any
                     steps {
                         unstash 'source-code'
                         catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
@@ -35,6 +38,7 @@ pipeline {
                     }
                 }
                 stage('Security') {
+                    agent any
                     steps {
                         unstash 'source-code'
                         bat '''
@@ -48,14 +52,15 @@ pipeline {
             }
         }
         stage('Coverage') {
+            agent { windows-node1 }
             steps {
-                unstash 'results'
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
                 }
             }
         }
         stage('Performance') {
+            agent any
             steps {
                 bat '''
                     set FLASK_APP=app\\api.py
