@@ -12,18 +12,11 @@ pipeline {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     bat '''
                     set PYTHONPATH=%WORKSPACE%
-                    coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest test\\unit
-                    --junitxml=result-unit.xml
+                    coverage run --branch --source=app --omit=app\\__init__.ppy,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
                     coverage xml
                     '''
                     junit 'result*.xml'
-                }
-            }
-        }
-        stage('Coverage') {
-            steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
+                    stash name: 'coverage', includes: 'coverage.xml'
                 }
             }
         }
@@ -51,7 +44,16 @@ pipeline {
                         }
                     }
                 }
+                stage('Coverage') {
+                    steps {
+                    unstash 'source-code'
+                    unstash 'coverage'
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                        cobertura coberturaReportFile: 'coverage.xml', conditionalCoverageTargets: '100,0,90', lineCoverageTargets: '100,0,95'
+                    }
+                }
             }
+        }
         }
         stage('Performance') {
             steps {
